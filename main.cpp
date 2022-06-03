@@ -5,6 +5,19 @@
 #include <chrono>
 //#include "infinite_matrix.hpp"
 
+// TODO: change IsBalanced according to task to manage blocks, bounded by curly braces
+// IsBalanced(str)
+// Stack stack
+// for char in str:
+//     if char in [‘(‘, ‘[‘]:
+//         stack.Push(char )
+//     else
+//         if stack.Empty(): return False
+//             top ← stack.Pop()
+//         if (top = ‘[‘ and char != ‘]’) or (top = ‘(‘ and char != ‘)’):
+//             return False
+// return stack.Empty()
+
 int main()
 {
     std::size_t N = 0;
@@ -15,9 +28,10 @@ int main()
 
     std::cin >> read;
     cmds.emplace_back(std::move(read));
-    //auto start = std::chrono::sys_time<std::chrono::seconds>;
-    //auto start = std::chrono::system_clock::now();
-    //std::cout << "Current time: " << std::chrono::duration_cast<std::chrono::milliseconds>(start).count() << std::end;
+
+    std::time_t newt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::cout << "newt: " << newt << '\n';
+    std::cout << "newt: " << std::ctime(&newt) << '\n';
 
     while(std::cin >> read)
     {
