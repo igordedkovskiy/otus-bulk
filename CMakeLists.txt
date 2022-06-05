@@ -12,30 +12,34 @@ configure_file(version.h.in version.h)
 add_executable(${PROJECT_NAME}
     "main.cpp"
     "CmdCollector.hpp"
+    "read_input.hpp"
+    "generator.hpp"
+)
+add_library(bulk_lib
+    "CmdCollector.hpp"
     "CmdCollector.cpp"
     "read_input.hpp"
     "read_input.cpp"
     "generator.hpp"
 )
-#add_library(CustomAllocator_lib "CustomAllocator.h")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
 
-#set_target_properties(print_ip_lib PROPERTIES
-#    CXX_STANDARD 20
-#    CXX_STANDARD_REQUIRED ON
-#)
+set_target_properties(bulk_lib PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
 
-#target_include_directories(print_ip_lib
-#    PRIVATE "${CMAKE_BINARY_DIR}"
-#)
+target_include_directories(bulk_lib
+    PRIVATE "${CMAKE_BINARY_DIR}"
+)
 
-#target_link_libraries(${PROJECT_NAME} PRIVATE
-#    print_ip_lib
-#)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    bulk_lib
+)
 
 if(WITH_GTEST)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/googletest" "googletest")
@@ -60,6 +64,7 @@ if(WITH_GTEST)
         ${GTEST_BOTH_LIBRARIES}
         gtest
         gtest_main
+        bulk_lib
     )
 endif()
 
@@ -101,5 +106,5 @@ include(CPack)
 if(WITH_GTEST)
     include(CTest)
     enable_testing()
-    add_test(test_bulk test)
+    add_test(test test_bulk)
 endif()

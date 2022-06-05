@@ -63,7 +63,7 @@ private:
 
     enum class InputType { STATIC, DYNAMIC };
 
-    InputType type{InputType::STATIC};
+    InputType m_type{InputType::STATIC};
     bool m_block_finished{false};
     std::size_t m_capacity{0};
     std::size_t m_braces{0};

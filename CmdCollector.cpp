@@ -16,7 +16,7 @@ bool CmdCollector::input_block_finished() const noexcept
 
 void CmdCollector::finish_block() noexcept
 {
-    if(type == InputType::STATIC)
+    if(m_type == InputType::STATIC)
         m_block_finished = true;
 }
 
@@ -27,7 +27,7 @@ std::size_t CmdCollector::block_size() const noexcept
 
 bool CmdCollector::remaining_data_valid() const noexcept
 {
-    if(type == InputType::STATIC)
+    if(m_type == InputType::STATIC)
         return block_size();
     return block_size() && m_block_finished;
 }
@@ -39,7 +39,7 @@ void CmdCollector::process_cmd(std::string &&cmd)
 
     if(cmd == "{")
     {
-        type = InputType::DYNAMIC;
+        m_type = InputType::DYNAMIC;
         if(++m_braces == 1)
         {
             if(m_cmds.size() > 0)
@@ -52,7 +52,7 @@ void CmdCollector::process_cmd(std::string &&cmd)
             throw ParseErr::incorrect_format;
         if(--m_braces == 0)
         {
-            type = InputType::STATIC;
+            m_type = InputType::STATIC;
             m_block_finished = true;
         }
     }
@@ -89,6 +89,7 @@ void CmdCollector::clear_commands()
 
 void CmdCollector::reset()
 {
+    m_type = InputType::STATIC;
     m_braces = 0;
     clear_commands();
 }
