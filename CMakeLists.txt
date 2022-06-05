@@ -9,7 +9,14 @@ option(WITH_GTEST "Whether to build google test" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(${PROJECT_NAME} "main.cpp" "CmdProcessor.hpp" "CmdProcessor.cpp" "generator.hpp")
+add_executable(${PROJECT_NAME}
+    "main.cpp"
+    "CmdCollector.hpp"
+    "CmdCollector.cpp"
+    "read_input.hpp"
+    "read_input.cpp"
+    "generator.hpp"
+)
 #add_library(CustomAllocator_lib "CustomAllocator.h")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

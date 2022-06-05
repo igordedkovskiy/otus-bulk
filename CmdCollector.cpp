@@ -1,26 +1,38 @@
-#include "CmdProcessor.hpp"
+#include <sstream>
+#include <fstream>
+#include "CmdCollector.hpp"
 
-CmdProcessor::CmdProcessor(std::size_t N): m_capacity{N} { m_cmds.reserve(N); }
+CmdCollector::CmdCollector(std::size_t N):
+    m_capacity{N}
+{
+    m_cmds.reserve(N);
+}
 
-bool CmdProcessor::input_block_finished() const noexcept
+bool CmdCollector::input_block_finished() const noexcept
 {
     return m_block_finished;
     //return input_processor->input_block_finished();
 }
 
-std::size_t CmdProcessor::block_size() const noexcept
+void CmdCollector::finish_block() noexcept
+{
+    if(type == InputType::STATIC)
+        m_block_finished = true;
+}
+
+std::size_t CmdCollector::block_size() const noexcept
 {
     return m_cmds.size();
 }
 
-bool CmdProcessor::remaining_data_valid() const noexcept
+bool CmdCollector::remaining_data_valid() const noexcept
 {
     if(type == InputType::STATIC)
         return block_size();
     return block_size() && m_block_finished;
 }
 
-void CmdProcessor::process_cmd(std::string &&cmd)
+void CmdCollector::process_cmd(std::string &&cmd)
 {
     //input_processor = on_new_cmd(cmd);
     //input_processor->process_cmd(cmd);
@@ -37,7 +49,7 @@ void CmdProcessor::process_cmd(std::string &&cmd)
     else if(cmd == "}")
     {
         if(m_braces == 0)
-            throw 1;
+            throw ParseErr::incorrect_format;
         if(--m_braces == 0)
         {
             type = InputType::STATIC;
@@ -57,37 +69,37 @@ void CmdProcessor::process_cmd(std::string &&cmd)
     }
 }
 
-time_t CmdProcessor::block_start_time([[maybe_unused]] std::size_t number) const noexcept
+time_t CmdCollector::block_start_time([[maybe_unused]] std::size_t number) const noexcept
 {
     return m_time;
 }
 
-void CmdProcessor::set_block_max_size(std::size_t N)
+void CmdCollector::set_block_max_size(std::size_t N)
 {
     m_capacity = N;
     m_cmds.reserve(N);
 }
 
-void CmdProcessor::clear_commands()
+void CmdCollector::clear_commands()
 {
     m_time = 0;
     m_cmds.clear();
     m_block_finished = false;
 }
 
-void CmdProcessor::reset()
+void CmdCollector::reset()
 {
     m_braces = 0;
     clear_commands();
 }
 
-generator<std::string> CmdProcessor::get_cmd() const
+generator<std::string> CmdCollector::get_cmd() const
 {
-    if(type == InputType::DYNAMIC)
-    {
-        if(!m_block_finished)
-            co_return;
-    }
+//    if(type == InputType::DYNAMIC)
+//    {
+//        if(!m_block_finished)
+//            co_return;
+//    }
     for(const auto& cmd:m_cmds)
         co_yield cmd;
     //input_processor->get_cmd();

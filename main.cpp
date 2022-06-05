@@ -4,19 +4,21 @@
 #include <sstream>
 #include <fstream>
 
-#include "CmdProcessor.hpp"
+#include "CmdCollector.hpp"
+#include "read_input.hpp"
 
 int main()
 {
-    std::size_t N = 0;
-    std::cin >> N;
-    CmdProcessor commands{N};
+    //CmdProcessor commands;
+    //commands.process_input(std::cin);
+
+    CmdCollector commands{read_input_size(std::cin, std::cerr)};
 
     auto print = [&commands]()
     {
         std::stringstream fname;
         fname << "bulk" << commands.block_start_time(0) << ".log";
-        std::fstream file{fname.str(), std::fstream::out};
+        std::fstream file{fname.str(), std::fstream::out | std::fstream::app};
         file << "bulk: ";
         std::cout << "bulk: ";
 
@@ -36,15 +38,18 @@ int main()
         commands.clear_commands();
     };
 
-    std::string read;
-    while(std::cin >> read)
+    auto process = [&commands, &print](std::string&& read)
     {
         commands.process_cmd(std::move(read));
         read.clear();
         if(commands.input_block_finished())
             print();
-    }
-    if(commands.remaining_data_valid())
+    };
+
+    read_input<decltype(process), CmdCollector::ParseErr>(std::cin, std::cerr, process);
+    commands.finish_block();
+    //if(commands.remaining_data_valid())
+    if(commands.input_block_finished())
         print();
     return 0;
 }

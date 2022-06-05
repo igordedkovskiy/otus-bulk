@@ -1,22 +1,29 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <chrono>
 #include "generator.hpp"
 
-class CmdProcessor
+class CmdCollector
 {
 public:
-    CmdProcessor() noexcept = default;
-    CmdProcessor(const CmdProcessor&) = default;
-    CmdProcessor(CmdProcessor&&) noexcept = default;
-    CmdProcessor& operator=(const CmdProcessor&) = default;
-    CmdProcessor& operator=(CmdProcessor&&) noexcept = default;
-    ~CmdProcessor() noexcept = default;
+    enum class ParseErr: std::uint8_t
+    {
+        incorrect_format
+    };
 
-    CmdProcessor(std::size_t N);
+    CmdCollector() noexcept = default;
+    CmdCollector(const CmdCollector&) = default;
+    CmdCollector(CmdCollector&&) noexcept = default;
+    CmdCollector& operator=(const CmdCollector&) = default;
+    CmdCollector& operator=(CmdCollector&&) noexcept = default;
+    ~CmdCollector() noexcept = default;
+
+    CmdCollector(std::size_t N);
 
     bool input_block_finished() const noexcept;
+    void finish_block() noexcept;
 
     std::size_t block_size() const noexcept;
 
