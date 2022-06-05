@@ -72,9 +72,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(${PROJECT_NAME} PRIVATE
         /W4 /await
     )
-#    target_compile_options(print_ip_lib PRIVATE
-#        /W4 /await
-#    )
+    target_compile_options(bulk_lib PRIVATE
+        /W4 /await
+    )
     if(WITH_GTEST)
         target_compile_options(test_bulk PRIVATE
             /W4 /await
@@ -84,9 +84,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME} PRIVATE
         "-Wall" "-Wextra" "-Werror" "-pedantic" "-fcoroutines"
     )
-#    target_compile_options(print_ip_lib PRIVATE
-#        "-Wall" "-Wextra" "-Werror" "-pedantic" "-fcoroutines"
-#    )
+    target_compile_options(bulk_lib PRIVATE
+        "-Wall" "-Wextra" "-Werror" "-pedantic" "-fcoroutines"
+    )
     if(WITH_GTEST)
         target_compile_options(test_bulk PRIVATE
             "-Wall" "-Wextra" "-Werror" "-pedantic" "-fcoroutines"
