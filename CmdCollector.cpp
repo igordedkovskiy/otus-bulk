@@ -80,14 +80,14 @@ void CmdCollector::set_block_max_size(std::size_t N)
     m_cmds.reserve(N);
 }
 
-void CmdCollector::clear_commands()
+void CmdCollector::clear_commands() noexcept
 {
     m_time = 0;
     m_cmds.clear();
     m_block_finished = false;
 }
 
-void CmdCollector::reset()
+void CmdCollector::reset() noexcept
 {
     m_type = InputType::STATIC;
     m_braces = 0;

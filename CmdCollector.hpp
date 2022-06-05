@@ -35,9 +35,9 @@ public:
 
     void set_block_max_size(std::size_t N);
 
-    void clear_commands();
+    void clear_commands() noexcept;
 
-    void reset();
+    void reset() noexcept;
 
     generator<std::string> get_cmd() const;
 
