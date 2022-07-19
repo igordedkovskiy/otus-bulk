@@ -6,7 +6,7 @@
 #include "CmdCollector.hpp"
 #include "read_input.hpp"
 
-TEST(TEST_MATRIX, task_example)
+TEST(TEST_BULK, task_example)
 {
     CmdCollector commands{3};
 

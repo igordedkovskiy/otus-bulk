@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <coroutine>
+#include <iterator>
 
 template<typename T>
 struct generator {
@@ -67,8 +68,8 @@ struct generator {
         }
     }
 
-    // Make us an iteratable resumable_thing (Se we can be resumed in e.g., a for loop)
-    struct iterator : public std::iterator<std::input_iterator_tag, T> {
+    // Make us an iteratable resumable_thing (So we can be resumed in e.g., a for loop)
+    struct iterator: public std::iterator_traits<T> {
         std::coroutine_handle<promise_type> _coroutine;
 
         iterator() = default;

@@ -41,6 +41,36 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     bulk_lib
 )
 
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    # Update submodules as needed
+    option(GIT_SUBMODULE "Check submodules during build" ON)
+    if(GIT_SUBMODULE)
+        message(STATUS "Submodules: add and update")
+
+        if(WITH_GTEST)
+            if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/googletest")
+                execute_process(COMMAND ${GIT_EXECUTABLE}
+                                submodule add https://github.com/google/googletest.git googletest
+                                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                                RESULT_VARIABLE GIT_SUBMOD_RESULT)
+                if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+                    message(FATAL_ERROR "git submodule add https://github.com/google/googletest.git googletest failed
+                            with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+                endif()
+            endif()
+        endif()
+
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init --recursive failed
+                    with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+        endif()
+    endif()
+endif()
+
 if(WITH_GTEST)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/googletest" "googletest")
     add_executable(test_bulk "test.cpp")
