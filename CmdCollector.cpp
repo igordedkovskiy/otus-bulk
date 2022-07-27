@@ -3,7 +3,7 @@
 #include "CmdCollector.hpp"
 
 CmdCollector::CmdCollector(std::size_t N):
-    m_capacity{N}
+    m_block_size{N}
 {
     m_cmds.reserve(N);
 }
@@ -11,12 +11,11 @@ CmdCollector::CmdCollector(std::size_t N):
 bool CmdCollector::input_block_finished() const noexcept
 {
     return m_block_finished;
-    //return input_processor->input_block_finished();
 }
 
 void CmdCollector::finish_block() noexcept
 {
-    if(m_type == InputType::STATIC)
+    if(m_type == BlockType::STATIC)
         m_block_finished = true;
 }
 
@@ -27,19 +26,16 @@ std::size_t CmdCollector::block_size() const noexcept
 
 bool CmdCollector::remaining_data_valid() const noexcept
 {
-    if(m_type == InputType::STATIC)
+    if(m_type == BlockType::STATIC)
         return block_size();
     return block_size() && m_block_finished;
 }
 
 void CmdCollector::process_cmd(std::string &&cmd)
 {
-    //input_processor = on_new_cmd(cmd);
-    //input_processor->process_cmd(cmd);
-
     if(cmd == "{")
     {
-        m_type = InputType::DYNAMIC;
+        m_type = BlockType::DYNAMIC;
         if(++m_braces == 1)
         {
             if(m_cmds.size() > 0)
@@ -52,7 +48,7 @@ void CmdCollector::process_cmd(std::string &&cmd)
             throw ParseErr::incorrect_format;
         if(--m_braces == 0)
         {
-            m_type = InputType::STATIC;
+            m_type = BlockType::STATIC;
             m_block_finished = true;
         }
     }
@@ -61,9 +57,9 @@ void CmdCollector::process_cmd(std::string &&cmd)
         m_cmds.emplace_back(std::move(cmd));
         if(m_cmds.size() == 1)
             m_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        if(m_braces == 0)
+        if(m_type == BlockType::STATIC)
         {
-            if(m_cmds.size() == m_capacity)
+            if(m_cmds.size() == m_block_size)
                 m_block_finished = true;
         }
     }
@@ -76,7 +72,7 @@ time_t CmdCollector::block_start_time([[maybe_unused]] std::size_t number) const
 
 void CmdCollector::set_block_max_size(std::size_t N)
 {
-    m_capacity = N;
+    m_block_size = N;
     m_cmds.reserve(N);
 }
 
@@ -89,81 +85,19 @@ void CmdCollector::clear_commands() noexcept
 
 void CmdCollector::reset() noexcept
 {
-    m_type = InputType::STATIC;
+    m_type = BlockType::STATIC;
     m_braces = 0;
     clear_commands();
 }
 
 generator<std::string> CmdCollector::get_cmd() const
 {
-//    if(type == InputType::DYNAMIC)
-//    {
-//        if(!m_block_finished)
-//            co_return;
-//    }
     for(const auto& cmd:m_cmds)
         co_yield cmd;
-    //input_processor->get_cmd();
 }
 
-//InputType* on_new_cmd(const std::string& cmd)
-//{
-//    if(cmd == "{")
-//    {
-//        delete input_processor;
-//        input_processor = new Dynamic;
-//    }
-//    else if(cmd == "}" and --m_braces == 0)
-//    {
-//        delete input_processor;
-//        input_processor = new Static;
-//    }
-//    return input_processor;
-//}
+CmdCollector::cmds_t &CmdCollector::get_cmds() noexcept
+{
+    return m_cmds;
+}
 
-//generator<std::string> CmdProcessor::InputType::get_cmd() const
-//{
-//    for(const auto& cmd:m_cmds)
-//        co_yield cmd;
-//}
-
-//void CmdProcessor::Static::process_cmd(std::string &&cmd)
-//{
-//    m_cmds.emplace_back(std::move(cmd));
-//    if(m_cmds.size() == 1)
-//        m_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-//    if(m_cmds.size() == m_capacity)
-//        m_block_finished = true;
-//}
-
-//void CmdProcessor::Static::finish_input() noexcept override
-//{
-//    ;
-//}
-
-//generator<std::string> CmdProcessor::Dynamic::get_cmd() const
-//{
-//    if(m_block_finished)
-//        return InputType::get_cmd();
-//}
-
-//void CmdProcessor::Dynamic::process_cmd(std::string &&cmd)
-//{
-//    if(cmd == "{")
-//    {
-//        ++m_braces;
-//    }
-//    else if(cmd == "}")
-//    {
-//        if(m_braces == 0)
-//            throw 1;
-//        if(--m_braces == 0)
-//            m_dyn_block_finished = true;
-//    }
-//    else
-//    {
-//        m_cmds.emplace_back(std::move(cmd));
-//        if(m_cmds.size() == 1)
-//            m_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-//    }
-//}
