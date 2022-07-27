@@ -37,12 +37,37 @@ int main()
         cv.notify_all();
     };
 
-    std::mutex m1, m2, ml;
-    std::condition_variable cv1, cv2, cvl;
-    std::atomic<bool> v1{true}, v2{true}, vl{true};
-    std::thread f1, f2, log;
+    struct sync_context
+    {
+        void run(decltype(print)& print, std::ostream& stream, CmdCollector::cmds_t cmds)
+        {
+            m_thread = std::thread{print, std::ref(stream), std::move(cmds), std::ref(m_mutex), std::ref(m_cv), std::ref(m_done)};
+            m_done = false;
+            m_thread.detach();
+        }
 
-    std::stringstream fname;
+        void wait()
+        {
+            if(!m_done)
+            {
+                std::unique_lock lk(m_mutex);
+                m_cv.wait(lk);
+            }
+        }
+
+        bool ready() const noexcept
+        {
+            return m_done;
+        }
+
+        std::mutex m_mutex;
+        std::condition_variable m_cv;
+        std::atomic<bool> m_done{true};
+        std::thread m_thread;
+    };
+
+    sync_context f1, f2, log;
+
     std::fstream file1, file2;
 
     std::size_t fcntr{0};
@@ -55,45 +80,27 @@ int main()
         {
             const auto cmds{std::move(commands.get_cmds())};
 
-            if(!vl)
-            {
-                std::unique_lock lk(ml);
-                cvl.wait(lk);
-            }
-            {
-                log = std::thread{print, std::ref(std::cout), cmds, std::ref(ml), std::ref(cvl), std::ref(vl)};
-                vl = false;
-                log.detach();
-            }
+            log.wait();
+            log.run(print, std::cout, cmds);
 
-            fname.str(std::string{});
+            std::stringstream fname;
             fname << "bulk-" << commands.block_start_time(0) << '-' << ++fcntr << ".log";
 
-            if(v1)
+            if(f1.ready())
             {
                 file1 = std::fstream{fname.str(), std::fstream::out | std::fstream::app};
-                f1 = std::thread{print, std::ref(file1), std::move(cmds), std::ref(m1), std::ref(cv1), std::ref(v1)};
-                v1 = false;
-                f1.detach();
+                f1.run(print, file1, std::move(cmds));
             }
-            else if(v2)
+            else if(f2.ready())
             {
                 file2 = std::fstream{fname.str(), std::fstream::out | std::fstream::app};
-                f2 = std::thread{print, std::ref(file2), std::move(cmds), std::ref(m2), std::ref(cv2), std::ref(v2)};
-                v2 = false;
-                f2.detach();
+                f2.run(print, file2, std::move(cmds));
             }
             else
             {
-                if(!v1)
-                {
-                    std::unique_lock lk(m1);
-                    cv1.wait(lk);
-                }
+                f1.wait();
                 file1 = std::fstream{fname.str(), std::fstream::out | std::fstream::app};
-                f1 = std::thread{print, std::ref(file1), std::move(cmds), std::ref(m1), std::ref(cv1), std::ref(v1)};
-                v1 = false;
-                f1.detach();
+                f1.run(print, file1, std::move(cmds));
             }
 
             commands.clear_commands();
@@ -104,21 +111,9 @@ int main()
     commands.finish_block();
     process("{");
 
-    if(!v1)
-    {
-        std::unique_lock lk(m1);
-        cv1.wait(lk);
-    }
-    if(!v2)
-    {
-        std::unique_lock lk(m2);
-        cv2.wait(lk);
-    }
-    if(!vl)
-    {
-        std::unique_lock lk(ml);
-        cvl.wait(lk);
-    }
+    f1.wait();
+    f2.wait();
+    log.wait();
 
     return 0;
 }
